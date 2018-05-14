@@ -1,19 +1,36 @@
 #include <SoftwareSerial.h>// import the serial library
 #include <ArduinoJson.h>
+#include <Servo.h>
+#include <Adafruit_MotorShield.h>
 
+// ******************************************* Serial port Bluetooth
 SoftwareSerial Genotronex(10, 11); // RX, TX
 String inputString = "";
+int angle;
+int speed;
+
+// ******************************************* Motors and Servos
+Adafruit_MotorShield motorShield;
+Adafruit_DCMotor *motor;
+const int motorPort = 1;
+const int servoPort = 9;
 
 void setup() {
   // put your setup code here, to run once:
   Genotronex.begin(9600);
   Serial.begin(9600);
+  angle = 0;
+  speed = 0;
   inputString.reserve(200);
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
- while (Genotronex.available()) {
+ getParams();
+ printParams();
+}
+void getParams() {
+  while (Genotronex.available()) {
     char inChar = (char)Genotronex.read();
 
     if (inChar == '\n') {
@@ -27,18 +44,10 @@ void loop() {
 }
 
 void parseCommand() {
-
-  // buffer for command
   StaticJsonBuffer<100> commandBuffer;
-
-  // pointer to Json command object
   JsonObject& command = commandBuffer.parseObject(inputString);
-  
-  // get "cmd" value
   String cmd = command["cmd"];
-  
-  // depend on received command
-  // perform actions
+
   if (cmd == "some_command_1") {
     // perform some actions as a result of receive some_command_1
   } else if (cmd == "some_command_2") {
@@ -48,14 +57,18 @@ void parseCommand() {
      int value = command["params"]["value"];
      // actions ...
   } else if (cmd == "256") {
-     int speed = command["params"]["speed"];
-     int angle = command["params"]["angle"];
-     Serial.print(speed);
-     Serial.print("  ");
-     Serial.println(angle);
+     speed = command["params"]["speed"];
+     angle = command["params"]["angle"];
   }
-
-  // "some_command_1","some_command_2", "seek_bar_command" and "joystick_command" - strings that set
-  //  in the field "command" during add widget in app.
 }
-
+void setServoAngle() {
+  if(angle >=180) {
+    angle = abs(180-angle);
+  }
+   
+}
+void printParams() {
+  Serial.print(speed);
+  Serial.print("  ");
+  Serial.println(angle);
+}
