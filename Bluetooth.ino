@@ -1,4 +1,5 @@
-#include <SoftwareSerial.h>// import the serial library
+// ****************************************** Import libraries
+#include <SoftwareSerial.h>
 #include <ArduinoJson.h>
 #include <Servo.h>
 #include <Adafruit_MotorShield.h>
@@ -12,13 +13,20 @@ int speed;
 // ******************************************* Motors and Servos
 Adafruit_MotorShield motorShield;
 Adafruit_DCMotor *motor;
+Servo servo;
 const int motorPort = 1;
 const int servoPort = 9;
 
 void setup() {
   // put your setup code here, to run once:
+  // ***************************************** Intializing Serial Comms
   Genotronex.begin(9600);
   Serial.begin(9600);
+  // **************************************** Initializing motors and servos
+  motorShield = Adafruit_MotorShield();
+  servo.attach(servoPort);
+  motor = motorShield.getMotor(motorPort);
+  // **************************************** Intializing Variables
   angle = 0;
   speed = 0;
   inputString.reserve(200);
@@ -29,7 +37,9 @@ void loop() {
  getParams();
  printParams();
 }
+
 void getParams() {
+  // **************************************** calls parseCommand when all chars are in
   while (Genotronex.available()) {
     char inChar = (char)Genotronex.read();
 
@@ -44,6 +54,7 @@ void getParams() {
 }
 
 void parseCommand() {
+  // **************************************** Reading strings from Serial Comms
   StaticJsonBuffer<100> commandBuffer;
   JsonObject& command = commandBuffer.parseObject(inputString);
   String cmd = command["cmd"];
@@ -61,13 +72,26 @@ void parseCommand() {
      angle = command["params"]["angle"];
   }
 }
-void setServoAngle() {
-  if(angle >=180) {
-    angle = abs(180-angle);
-  }
-   
+
+void setServoAngle(int angle) {
+  // **************************************** Set Servo Angle
+  angle = constrain(angle, 0, 180);
+   servo.move(angle);
 }
+
+void setMotorPower(int power) {
+  // **************************************** Set Motor Speed
+  if (power < 0) {
+    motor->run(BACKWARD); 
+  } else {
+    motor->run(FORWARD);
+  }
+  power = constrain(power, -255, 255);
+  motor->setSpeed(power);
+}
+
 void printParams() {
+  // **************************************** Print parameters in Serial comms
   Serial.print(speed);
   Serial.print("  ");
   Serial.println(angle);
