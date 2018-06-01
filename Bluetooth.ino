@@ -26,6 +26,7 @@ void setup() {
   motorShield = Adafruit_MotorShield();
   servo.attach(servoPort);
   motor = motorShield.getMotor(motorPort);
+  motorShield.begin();
   // **************************************** Intializing Variables
   angle = 0;
   speed = 0;
@@ -34,8 +35,24 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
- getParams();
- printParams();
+// getParams();
+// printParams();
+// setMotorPower(speed);
+// setServoAngle(angle);
+//  Serial.print("here");
+  setMotorPower(255);
+  delay(1000);
+  setMotorPower(125);
+  delay(1000);
+  setMotorPower(0);
+  delay(1000);
+  setMotorPower(-125);
+  delay(1000);
+  setMotorPower(0);
+  delay(1000);
+
+   
+  
 }
 
 void getParams() {
@@ -76,7 +93,7 @@ void parseCommand() {
 void setServoAngle(int angle) {
   // **************************************** Set Servo Angle
   angle = constrain(angle, 0, 180);
-   servo.move(angle);
+   servo.write(angle);
 }
 
 void setMotorPower(int power) {
@@ -86,7 +103,7 @@ void setMotorPower(int power) {
   } else {
     motor->run(FORWARD);
   }
-  power = constrain(power, -255, 255);
+//  power = constrain(power, -255, 255);
   motor->setSpeed(power);
 }
 
