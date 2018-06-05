@@ -3,9 +3,10 @@
 #include <ArduinoJson.h>
 #include <Servo.h>
 #include <Adafruit_MotorShield.h>
+#include <Wire.h>
 
 // ******************************************* Serial port Bluetooth
-SoftwareSerial Genotronex(10, 11); // RX, TX
+SoftwareSerial Genotronex(5, 6); // RX, TX
 String inputString = "";
 int angle;
 int speed;
@@ -22,34 +23,27 @@ void setup() {
   // ***************************************** Intializing Serial Comms
   Genotronex.begin(9600);
   Serial.begin(9600);
+  
   // **************************************** Initializing motors and servos
   motorShield = Adafruit_MotorShield();
   servo.attach(servoPort);
   motor = motorShield.getMotor(motorPort);
   motorShield.begin();
+  
   // **************************************** Intializing Variables
   angle = 0;
   speed = 0;
   inputString.reserve(200);
 }
 
-void loop() {
+void loop() {  
   // put your main code here, to run repeatedly:
-// getParams();
-// printParams();
-// setMotorPower(speed);
-// setServoAngle(angle);
-//  Serial.print("here");
-  setMotorPower(255);
-  delay(1000);
-  setMotorPower(125);
-  delay(1000);
-  setMotorPower(0);
-  delay(1000);
-  setMotorPower(-125);
-  delay(1000);
-  setMotorPower(0);
-  delay(1000);
+
+ getParams();
+
+ setMotorPower(speed, angle);
+ setServoAngle(angle);
+
 
    
   
@@ -92,13 +86,24 @@ void parseCommand() {
 
 void setServoAngle(int angle) {
   // **************************************** Set Servo Angle
-  angle = constrain(angle, 0, 180);
+//  angle = constrain(angle, 0, 180);
+  angle = getAngle();
+  if (speed < 15 && angle == 0) {
+    angle = 90;
+  }
    servo.write(angle);
 }
 
-void setMotorPower(int power) {
+int getAngle() {
+  if(angle > 180) {
+    angle = 360 - angle;
+  }
+  return angle;
+}
+
+void setMotorPower(int power, int angle) {
   // **************************************** Set Motor Speed
-  if (power < 0) {
+  if (angle > 180) {
     motor->run(BACKWARD); 
   } else {
     motor->run(FORWARD);
